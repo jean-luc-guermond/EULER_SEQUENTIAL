@@ -1,0 +1,41 @@
+===Name of directory for mesh file===
+'/home/guermond/CONSERVATION_EQUATIONS/EULER/SEQUENTIAL_EULER/2D/Z_OLD_TESTS_FROM_QUARCKS/WIND_TUNNEL_REG/MESHES'
+===Name of mesh file===
+step_regul_0.05_0.02.FEM
+step_regul_0.01_0.003.FEM
+step_regul_0.03_0.01.FEM
+step_regul_0.05_0.01.FEM
+===Is the mesh formatted? (True/False)===
+.F.
+===Test case name===
+'step'
+===Equation of state===
+'gamma-law'
+===How many boundaries for u.n=0?===
+3 !1
+===List of boundarie for u.n=0?===
+5 6 4 2 7    !  5
+===How many Dirichlet boundaries for rho?===
+1
+===List of Dirichlet boundaries for rho?===
+1
+===How many Dirichlet boundaries for ux?===
+1
+===List of Dirichlet boundaries for ux?===
+1 6 5
+===How many Dirichlet boundaries for uy?===
+3
+===List of Dirichlet boundaries for uy?===
+1 2 7 4
+===Number of subdomains in the mesh===
+1
+===List of subdomain in the mesh===
+1
+===Type of finite element===
+1
+===Final time===
+4.d0
+===CFL number===
+1.2d0
+===Method type (galerkin, viscous, high)===
+'viscous'

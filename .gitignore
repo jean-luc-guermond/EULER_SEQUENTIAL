@@ -1,0 +1,6 @@
+*.plt
+*.mo
+*.o
+*.plt
+*.txt
+BUILD/
