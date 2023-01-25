@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE
+END
+Roe.f90
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE/Roe.f90
+END
+sol_exa_stub.f90
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE/sol_exa_stub.f90
+END
+grid_1d.f90
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE/grid_1d.f90
+END
+ideal_polytropic_gas.f90
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE/ideal_polytropic_gas.f90
+END
+Roe_linearization.f90
+K 25
+svn:wc:ra_dav:version-url
+V 107
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE/Roe_linearization.f90
+END
+exact_Riemann_solver_i.f90
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE/exact_Riemann_solver_i.f90
+END
+makefile
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE/makefile
+END
+shock_tube_profiles_i.f90
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/guermond/books/!svn/ver/708/FEM/LES/FINITE_DIFF_1D/EULER_LAGRANGE_NON_UNIF/SHOCKTUBE/shock_tube_profiles_i.f90
+END
