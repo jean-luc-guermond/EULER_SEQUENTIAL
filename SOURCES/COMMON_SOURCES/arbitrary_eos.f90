@@ -2,9 +2,9 @@
 MODULE arbitrary_eos_lambda_module
   IMPLICIT NONE
 
-  PUBLIC               :: lambda_arbitrary_eos !===Main function
+  PUBLIC               :: lambda_arbitrary_eos, init_lambda_arbitrary_eos !===Main function
   PUBLIC               :: rhostar, ustar, phi  !===Optional functions. Can be removed
-  REAL(KIND=8), PUBLIC :: b_covolume = 0.5d0
+  REAL(KIND=8), PUBLIC :: b_covolume = 0.d0
   PRIVATE
   INTEGER, PARAMETER:: NUMBER = KIND(1.d0)
   REAL(KIND=NUMBER), PARAMETER :: zero = 0
@@ -23,6 +23,12 @@ MODULE arbitrary_eos_lambda_module
   CHARACTER(LEN=1)  :: gamma_min_index, gamma_lm_index
 
 CONTAINS
+
+  SUBROUTINE init_lambda_arbitrary_eos(b_cov)
+    IMPLICIT NONE
+    REAL(KIND=8) :: b_cov
+    b_covolume=b_cov
+  END SUBROUTINE init_lambda_arbitrary_eos
 
   SUBROUTINE lambda_arbitrary_eos(in_rhol,in_ul,in_el,in_pl,in_rhor,in_ur,in_er,in_pr,in_tol,no_iter,&
        lambda_maxl_out,lambda_maxr_out,pstar,k)

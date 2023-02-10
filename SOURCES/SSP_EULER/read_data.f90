@@ -19,6 +19,7 @@ MODULE my_data_module
      LOGICAL                        :: if_lumped
      CHARACTER(LEN=30)              :: max_viscosity
      CHARACTER(LEN=30)              :: equation_of_state
+     REAL(KIND=8)                   :: b_covolume
      CHARACTER(LEN=30)              :: method_type
      CHARACTER(LEN=30)              :: high_order_viscosity
      LOGICAL                        :: if_convex_limiting
@@ -52,6 +53,7 @@ CONTAINS
     a%CFL=1.d0
     a%checkpointing_freq=1.d20
     a%dt_plot=1.d20
+    a%b_covolume = 0.d0
     !===Characters
     a%directory='.'
     a%limiter_type='avg'
@@ -101,6 +103,11 @@ CONTAINS
     IF (okay) THEN
        READ (in_unit,*) inputs%equation_of_state
     END IF
+
+    IF (inputs%equation_of_state.NE.'gamma-law') THEN
+       CALL read_until(21, '===Covolume coefficient b===')
+       READ(in_unit,*) inputs%b_covolume
+    END IF
    
     CALL read_until(in_unit, "===Final time===") 
     READ (in_unit,*) inputs%Tfinal
@@ -124,9 +131,8 @@ CONTAINS
     IF (okay) THEN
        READ (in_unit,*) inputs%checkpointing_freq
     END IF
-
     CALL read_until(in_unit, "===Method type (galerkin, viscous, high)===")
-    READ (in_unit,*) inputs%method_type
+    READ (in_unit,*) inputs%method_type 
     SELECT CASE(inputs%method_type)
     CASE('high')
        CALL read_until(in_unit, "===High-order method===")
@@ -140,7 +146,6 @@ CONTAINS
           READ (in_unit,*)  inputs%if_relax_bounds
        END IF
     END SELECT
-
     SELECT CASE(inputs%method_type)
     CASE('galerkin','high')
        CALL read_until(in_unit, "===Mass matrix lumped (true/false)===")
@@ -156,7 +161,6 @@ CONTAINS
     CASE DEFAULT
        inputs%ce=0.d0
     END SELECT
-
     CALL find_string(in_unit, "===Test case name===",okay)
     IF (okay) THEN
        READ (in_unit,*) inputs%type_test
@@ -185,7 +189,6 @@ CONTAINS
        inputs%uy_nb_Dir_bdy=0
        ALLOCATE(inputs%uy_Dir_list(inputs%uy_nb_Dir_bdy))
     END IF
-    
     CALL find_string(in_unit, "===How many Diriclet boundaries (subsonic/supersonic)?===",okay)
     IF (okay) THEN
        READ (in_unit,*) inputs%nb_DIR
@@ -224,7 +227,6 @@ CONTAINS
     IF (okay) THEN
        READ (in_unit,*)  inputs%dt_plot
     END IF
-
     !===Regression test
     CALL getarg(1,argument)
     IF (trim(adjustl(argument))=='regression') THEN

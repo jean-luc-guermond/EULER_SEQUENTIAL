@@ -7,10 +7,14 @@ MODULE euler_start
   USE space_dim
   USE mesh_handling
   USE input_data
+  USE arbitrary_eos_lambda_module
 CONTAINS
   SUBROUTINE start_euler
     inputs%syst_size = k_dim+2
     CALL read_my_data('data')
+    IF (inputs%equation_of_state.NE.'gamma_law') THEN
+       CALL init_lambda_arbitrary_eos(inputs%b_covolume)
+    END IF
     CALL construct_mesh
     CALL construct_euler_bc
     CALL construct_euler_matrices

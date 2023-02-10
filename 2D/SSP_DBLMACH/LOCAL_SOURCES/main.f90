@@ -7,9 +7,10 @@ PROGRAM compressible_euler
   USE euler_start
   USE update_euler
   USE character_strings
+  USE regression_test
   IMPLICIT NONE
   REAL(KIND=8), DIMENSION(:,:), ALLOCATABLE :: un, uo, ui
-  INTEGER                                   :: it, it_max, it_plot, it_time
+  INTEGER                                   :: it, it_reg=0, it_max, it_plot, it_time
   REAL(KIND=8)                              :: tps, to, norm, t_plot, dt_plot
   CHARACTER(len=1)                          :: tit
   CALL start_euler
@@ -20,20 +21,19 @@ PROGRAM compressible_euler
   CALL COMPUTE_DT(un)
 
   !===Plotting
-  OPEN(UNIT = 21, FILE = 'data', FORM = 'formatted', STATUS = 'unknown')
-  CALL read_until(21, '===dt_plot')
-  READ (21,*) dt_plot
   it_plot = 0
-  t_plot = dt_plot
-  CLOSE(21)
+  t_plot = inputs%dt_plot
   !===End plotting
 
   it_time = 0
   tps = user_time()
   it_max = INT(inputs%Tfinal/inputs%dt)
   inputs%dt = inputs%Tfinal/it_max
-  !DO it = 1, it_max
   DO WHILE(inputs%time<inputs%Tfinal)
+     it_reg = it_reg + 1
+     IF (inputs%if_regression_test .AND. it_reg>5) THEN
+        EXIT
+     END IF
      CALL COMPUTE_DT(un)
      IF (inputs%time + inputs%dt>inputs%Tfinal) THEN
         inputs%dt=inputs%Tfinal-inputs%time
@@ -66,6 +66,10 @@ PROGRAM compressible_euler
   END DO
   tps = user_time() - tps
   WRITE(*,*) 'total time', tps, 'Time per time step per grid point', tps/(it_time*mesh%np), 'itmax', it_time
+
+  !===Regression test
+  CALL regression(un)
+  
   CALL plot_scalar_field(mesh%jj, mesh%rr, un(1,:), 'rho.plt')
   CALL plot_scalar_field(mesh%jj, mesh%rr, un(2,:)/un(1,:), 'ux.plt')
   CALL plot_scalar_field(mesh%jj, mesh%rr, un(3,:)/un(1,:), 'uy.plt')

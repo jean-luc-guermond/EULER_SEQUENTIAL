@@ -29,7 +29,6 @@ PROGRAM compressible_euler
   tps = user_time()
   it_max = INT(inputs%Tfinal/inputs%dt)
   inputs%dt = inputs%Tfinal/it_max
-  !DO it = 1, 5 !it_max
   DO WHILE(inputs%time<inputs%Tfinal)
      it_reg = it_reg + 1
      IF (inputs%if_regression_test .AND. it_reg>5) THEN

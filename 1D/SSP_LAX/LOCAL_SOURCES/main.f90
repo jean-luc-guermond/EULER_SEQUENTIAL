@@ -48,7 +48,7 @@ PROGRAM compressible_euler
   tps = user_time() - tps
   WRITE(*,*) 'total time', tps, 'Time per time step and dof', tps/(it_time*mesh%np)
 
-   !===Regression test
+  !===Regression test
   CALL regression(un)
 
   CALL plot_1d(mesh%rr(1,:),un(1,:),'rho.plt')

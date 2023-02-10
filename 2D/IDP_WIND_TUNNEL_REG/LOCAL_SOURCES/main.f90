@@ -10,12 +10,12 @@ PROGRAM compressible_euler
   USE IDP_update_euler
   USE IDP_euler_boundary_conditions
   IMPLICIT NONE
-  REAL(KIND=8), DIMENSION(:,:), ALLOCATABLE :: un, uo, ui
+  REAL(KIND=8), DIMENSION(:,:), ALLOCATABLE :: un
   INTEGER                                   :: it, it_max, it_plot, it_time
   REAL(KIND=8)                              :: tps, to, norm, t_plot
   CHARACTER(len=1)                          :: tit
   CALL IDP_start_euler
-  ALLOCATE(un(mesh%np,k_dim+2),uo(mesh%np,k_dim+2),ui(mesh%np,k_dim+2))
+  ALLOCATE(un(mesh%np,k_dim+2))
   inputs%time =0.d0
   CALL init(un,mesh%rr)
   CALL plot_scalar_field(mesh%jj, mesh%rr, un(:,1), 'rhoinit.plt')
@@ -40,22 +40,9 @@ PROGRAM compressible_euler
      IF (inputs%time + inputs%dt>inputs%Tfinal) THEN
         inputs%dt=inputs%Tfinal-inputs%time
      END IF
-     to = inputs%time
-     uo = un 
-     !===Step 1
-     CALL IDP_euler(uo,un)
-     CALL IDP_euler_BC(un,to+inputs%dt) !t+dt
-     !===Step 2
-     inputs%time=to+inputs%dt
-     CALL IDP_euler(un,ui)
-     un = (3*uo+ ui)/4
-     CALL IDP_euler_BC(un,to+inputs%dt/2) !t+dt/2
-     !===Step 3
-     inputs%time =  to + inputs%dt/2
-     CALL IDP_euler(un,ui)
-     un = (uo+ 2*ui)/3
-     CALL IDP_euler_BC(un,to+inputs%dt) !t+dt/2
-     inputs%time = to + inputs%dt
+      !write(*,*) 'time ', time, inputs%dt
+     CALL full_step_ERK(un) 
+     inputs%time = inputs%time + inputs%dt
      WRITE(*,*) 'time, dt ', inputs%time, inputs%dt
      IF ((inputs%time<t_plot .AND. inputs%time+inputs%dt/2>t_plot) .OR. &
           (inputs%time.GE.t_plot .AND. inputs%time-inputs%dt/2<t_plot)) THEN

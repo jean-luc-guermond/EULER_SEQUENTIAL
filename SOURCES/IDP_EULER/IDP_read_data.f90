@@ -19,6 +19,7 @@ MODULE my_data_module
      LOGICAL                        :: if_lumped
      CHARACTER(LEN=30)              :: max_viscosity
      CHARACTER(LEN=30)              :: equation_of_state
+     REAL(KIND=8)                   :: b_covolume
      CHARACTER(LEN=30)              :: method_type
      CHARACTER(LEN=30)              :: high_order_viscosity
      LOGICAL                        :: if_convex_limiting
@@ -52,6 +53,7 @@ CONTAINS
     a%CFL=1.d0
     a%checkpointing_freq=1.d20
     a%dt_plot=1.d20
+    a%b_covolume = 0.d0
     !===Characters
     a%directory='.'
     a%limiter_type='avg'
@@ -101,6 +103,12 @@ CONTAINS
     CALL find_string(in_unit, "===Equation of state===",okay)
     IF (okay) THEN
        READ (in_unit,*) inputs%equation_of_state
+    END IF
+
+    IF (inputs%equation_of_state.NE.'gamma-law') THEN
+       write(*,*) ' ******'
+       CALL read_until(21, '===Covolume coefficient b===')
+       READ(in_unit,*) inputs%b_covolume
     END IF
 
     CALL read_until(in_unit, "===RK method type===")

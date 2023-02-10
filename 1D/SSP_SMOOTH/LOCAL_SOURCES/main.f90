@@ -8,6 +8,7 @@ PROGRAM compressible_euler
   USE euler_start
   USE update_euler
   USE character_strings
+
   IMPLICIT NONE
   REAL(KIND=8), DIMENSION(:,:), ALLOCATABLE :: un, uo, ui
   INTEGER                                   :: i, j, it=0, it_max, it_time=0
@@ -20,7 +21,9 @@ PROGRAM compressible_euler
   CALL plot_1d(mesh%rr(1,:),un(1,:),'rhoinit.plt')
   CALL plot_1d(mesh%rr(1,:),un(2,:)/un(1,:),'uinit.plt')
   CALL plot_1d(mesh%rr(1,:),un(3,:),'Einit.plt')
+
   CALL COMPUTE_DT(un)
+
   tps = user_time()
   it_max = int(inputs%Tfinal/inputs%dt)
   inputs%dt = inputs%Tfinal/it_max
@@ -55,7 +58,7 @@ PROGRAM compressible_euler
   tps = user_time() - tps
   WRITE(*,*) 'total time', tps, 'Time per time step and dof', tps/(it_time*mesh%np)
 
-   !===Regression test
+  !===Regression test
   CALL regression(un)
 
   CALL plot_1d(mesh%rr(1,:),un(1,:),'rho.plt')
@@ -91,7 +94,7 @@ CONTAINS
     m_e = mt_anal(1,mesh%rr)
     E_e = E_anal(mesh%rr)
     p_e = press_anal(mesh%rr)
-    
+
     CALL ns_l1 (mesh, un(1,:) - r_e, error_rho_1)
     CALL ns_l1 (mesh,           r_e, norm_rho_1)
     CALL ns_0  (mesh, un(1,:) - r_e, error_rho_2)
