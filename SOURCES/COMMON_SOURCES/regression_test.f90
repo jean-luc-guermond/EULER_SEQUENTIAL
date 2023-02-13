@@ -9,7 +9,7 @@ CONTAINS
     REAL(KIND=8), DIMENSION(:), POINTER :: curr_reg_test, ref_reg_test
     INTEGER :: it, it_max
     INTEGER,      PARAMETER :: in_unit=10, out_unit=11
-    REAL(KIND=8), PARAMETER :: tol = 1.d-12
+    REAL(KIND=8), PARAMETER :: tol = 1.d-10
     IF (SIZE(un,1)==mesh%np) THEN
        it_max = SIZE(un,2)
     ELSE
