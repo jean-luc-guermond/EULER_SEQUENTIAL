@@ -42,7 +42,7 @@ endif()
 # Define runtime output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/EXECUTABLE)
 set(SMALL_SFEMaNS_LIB "$ENV{SMALL_SFEMaNS_DIR}/BUILD/libSMALL_SFEMaNS.so")
-set(EULER_DIR /home/guermond/CONSERVATION_EQUATIONS/EULER/SEQUENTIAL_EULER)
+set(EULER_DIR "$ENV{EULER_DIR}")
 
 file(GLOB_RECURSE global_sources ${EULER_DIR}/SOURCES/COMMON_SOURCES/*.f90 ${EULER_DIR}/SOURCES/IDP_EULER/*.f90
   ${EULER_DIR}/SOURCES/SHOCKTUBE/*.f90 )
@@ -63,12 +63,13 @@ target_link_libraries(${exe} ${SMALL_SFEMaNS_LIB} LAPACK::LAPACK)
 # Regression tests
 set(passRegex "ok")
 
-add_test(NAME idp_1D_smooth_low
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../RUNS/REGRESSION_TESTS
-  COMMAND /bin/sh/ low.sh)
-set_property (TEST idp_1D_smooth_low PROPERTY PASS_REGULAR_EXPRESSION "${passRegex}")
+list(APPEND name_of_test    0      1 )
+list(APPEND name_of_command low.sh galerkin.sh)
 
-add_test(NAME idp_1D_smooth_galerkin
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../RUNS/REGRESSION_TESTS
-  COMMAND /bin/sh/ galerkin.sh)
-set_property (TEST idp_1D_smooth_galerkin PROPERTY PASS_REGULAR_EXPRESSION "${passRegex}")
+foreach(num IN ZIP_LISTS name_of_test name_of_command)
+  set (nm "idp_1D_smooth${num_0}")
+  add_test(NAME ${nm}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../REGRESSION_TESTS
+  COMMAND /bin/sh/ ${num_1})
+  set_property (TEST ${nm} PROPERTY PASS_REGULAR_EXPRESSION "${passRegex}")
+endforeach()

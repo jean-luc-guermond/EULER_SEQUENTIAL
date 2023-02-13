@@ -1,0 +1,30 @@
+===Name of directory for mesh file===
+'.'
+===Name of mesh file===
+mesh.FEM
+===Is the mesh formatted? (True/False)===
+.F.
+===Equation of state===
+'gamma-law'
+===How many Dirichlet boundaries for rho?===
+1
+===List of Dirichlet boundaries for rho?===
+1
+===How many Dirichlet boundaries for ux?===
+1
+===List of Dirichlet boundaries for ux?===
+1
+===Number of subdomains in the mesh===
+1
+===List of subdomain in the mesh===
+1
+===Type of finite element===
+1
+===RK method type===
+-31
+===Final time===
+.6d0
+===CFL number===
+.25d0
+===Method type (galerkin, viscous, high)===
+'viscous'

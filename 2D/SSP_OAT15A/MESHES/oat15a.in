@@ -1,0 +1,12 @@
+oat15a 1
+5
+circle 1
+0 0  4 270 90
+line 2
+0 4 6 4
+line 3
+6 4 6 -4
+line 4
+6 -4 0 -4
+data 5
+data_o

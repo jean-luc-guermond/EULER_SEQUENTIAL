@@ -1,0 +1,10 @@
+NV      NE
+ 1      1 
+
+BEGIN
+       E       N      BV      EV
+       1       2       1       1
+   IDATA   SDATA   HDATA
+       1     0.0    .01250
+       1     1.0    .01250
+END

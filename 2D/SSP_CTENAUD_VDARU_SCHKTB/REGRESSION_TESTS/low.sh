@@ -1,0 +1,3 @@
+cp data_low_order data
+cp reference_regression_test_low_order reference_regression_test
+srun-serial ../EXECUTABLE/ssp_2D_euler_CTenaud_VDaru_shktb.exe regression

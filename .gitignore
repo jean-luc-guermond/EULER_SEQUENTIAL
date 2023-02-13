@@ -1,6 +1,12 @@
 *.plt
-*.mo
+*.vtk
+*.mod
 *.o
 *.plt
-*.txt
+*.gz
+*.tar
+*_exact
+err_*
+HR_*
+Mesh_1_*
 BUILD/

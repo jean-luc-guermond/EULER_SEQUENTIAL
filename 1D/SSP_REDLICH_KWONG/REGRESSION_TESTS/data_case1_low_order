@@ -1,0 +1,32 @@
+===Name of directory for mesh file===
+'.'
+===Name of mesh file===
+mesh.FEM
+===Is the mesh formatted? (True/False)===
+.F.
+===Equation of state===
+'rdkw'
+===Covolume coefficient b===
+0.5
+===RDKW test case: (1,2)===
+1
+===How many Dirichlet boundaries for rho?===
+2
+===List of Dirichlet boundaries for rho?===
+1 2
+===How many Dirichlet boundaries for ux?===
+2
+===List of Dirichlet boundaries for ux?===
+1 2
+===Number of subdomains in the mesh===
+1
+===List of subdomain in the mesh===
+1
+===Type of finite element===
+1
+===Final time===
+.1d0
+===CFL number===
+.5d0
+===Method type (galerkin, viscous, high)===
+'viscous'

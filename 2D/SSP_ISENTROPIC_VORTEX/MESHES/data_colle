@@ -1,0 +1,17 @@
+.f.  !    .t.= formatted  .f.=unformatted
+1
+. FEM.unit_sq
+0
+0
+. FEM.cav2
+0
+0
+
+1
+. FEM.circle
+0
+0
+
+1 ! nb interface a conserver
+5 ! index de l'interface
+

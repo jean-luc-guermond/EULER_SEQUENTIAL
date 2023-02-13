@@ -1,0 +1,62 @@
+===Name of directory for mesh file===
+'../../MESHES'
+===Name of mesh file===
+FEM.oat15a_r4_h0p05
+===Is the mesh formatted? (True/False)===
+.F.
+===Restart (true/false)===
+.f.
+===Equation of state===
+'gamma-law'
+===Checkpointing frequency===
+1000000.d-6
+===dt_plot?===
+100000.d-6
+===How many boundaries for u.n=0?===
+1
+===List of boundarie for u.n=0?===
+5
+===How many Diriclet boundaries (subsonic/supersonic)?===
+4
+===List of Diriclet boundaries (subsonic/supersonic)?===
+1 2 3 4
+===How many Dirichlet boundaries for rho?===
+0
+===List of Dirichlet boundaries for rho?===
+1
+===How many Dirichlet boundaries for ux?===
+0
+===List of Dirichlet boundaries for ux?===
+1  6
+===How many Dirichlet boundaries for uy?===
+0
+===List of Dirichlet boundaries for uy?===
+1
+===Number of subdomains in the mesh===
+1
+===List of subdomain in the mesh===
+1
+===Type of finite element===
+1
+===Final time===
+7000.d-6
+===CFL number===
+.5d0
+===Method type (galerkin, viscous, high)===
+'high'
+'viscous'
+===High-order method===
+'EV(s)'
+===Mass matrix lumped (true/false)===
+.f.
+===Convex limiting (true/false)===
+.t.
+===Relax bounds?===
+.f.
+===ce coefficient===
+1.0d0
+===Limiter type (avg, minmod)===
+'avg'
+'minmod'
+===dt_plot
+.05

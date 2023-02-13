@@ -63,12 +63,13 @@ target_link_libraries(${exe} ${SMALL_SFEMaNS_LIB} LAPACK::LAPACK)
 # Regression tests
 set(passRegex "ok")
 
-add_test(NAME ssp_1D_lax_low
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../RUNS/REGRESSION_TESTS
-  COMMAND /bin/sh/ low.sh)
-set_property (TEST ssp_1D_lax_low PROPERTY PASS_REGULAR_EXPRESSION "${passRegex}")
+list(APPEND name_of_test    0      1 )
+list(APPEND name_of_command low.sh high.sh)
 
-add_test(NAME ssp_1D_lax_high
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../RUNS/REGRESSION_TESTS
-  COMMAND /bin/sh/ high.sh)
-set_property (TEST ssp_1D_lax_high PROPERTY PASS_REGULAR_EXPRESSION "${passRegex}")
+foreach(num IN ZIP_LISTS name_of_test name_of_command)
+  set (nm "ssp_1D_lax${num_0}")
+  add_test(NAME ${nm}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../REGRESSION_TESTS
+  COMMAND /bin/sh/ ${num_1})
+  set_property (TEST ${nm} PROPERTY PASS_REGULAR_EXPRESSION "${passRegex}")
+endforeach()

@@ -1,0 +1,64 @@
+NV      NE
+ 7       7
+
+BEGIN
+       E       N      BV      EV
+       1       2       1       2
+   IDATA   SDATA   HDATA
+       1     0.0    .010
+       1     1.0    .010
+END
+
+BEGIN
+       E       N      BV      EV
+       2       4       2       3
+   IDATA   SDATA   HDATA
+       1    0.00   0.010
+       1    0.15   0.0028
+       1    0.50   0.0028
+       1    1.00   0.010
+END
+
+BEGIN
+       E       N      BV      EV
+       3       2       3       4
+   IDATA   SDATA   HDATA
+       1     0.0    .010
+       1     1.0    .010
+END
+
+BEGIN
+       E       N      BV      EV
+       4       4       4       5
+   IDATA   SDATA   HDATA
+       1    0.00   0.010
+       1    0.15   0.0040
+       1    0.97   0.0030
+       1    1.00   0.0030
+END
+
+BEGIN
+       E       N      BV      EV
+       5       2       5       6
+   IDATA   SDATA   HDATA
+       1     0.0    .0030
+       1     1.0    .0030
+END
+
+BEGIN
+       E       N      BV      EV
+       6       3       6       7
+   IDATA   SDATA   HDATA
+       1     0.0    .0030
+       1     0.025  .0030
+       1     1.0    .0030
+END
+
+BEGIN
+       E       N      BV      EV
+       7       3       7       1
+   IDATA   SDATA   HDATA
+       1     0.0    .0030
+       1     0.5    .0030
+       1     1.0    .010
+END

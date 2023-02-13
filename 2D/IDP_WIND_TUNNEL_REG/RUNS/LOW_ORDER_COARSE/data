@@ -1,7 +1,5 @@
-===Regression test? (.t.,.f.)===
-.t.
 ===Name of directory for mesh file===
-'/home/guermond/CONSERVATION_EQUATIONS/EULER/SEQUENTIAL_EULER/2D/Z_OLD_TESTS_FROM_QUARCKS/WIND_TUNNEL_REG/MESHES'
+'../../MESHES'
 ===Name of mesh file===
 step_regul_0.05_0.02.FEM
 ===Is the mesh formatted? (True/False)===

@@ -1,5 +1,5 @@
 ===Name of directory for mesh file===
-'/home/guermond/CONSERVATION_EQUATIONS/EULER/SEQUENTIAL_EULER/2D/DBLMACH/RUNS/MESHES'
+'../../MESHES'
 ===Name of mesh file===
 'DBLE_MACH_0.003.FEM'
 ===Is the mesh formatted? (True/False)===

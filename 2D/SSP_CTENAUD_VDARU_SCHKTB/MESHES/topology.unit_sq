@@ -1,0 +1,35 @@
+NV      NE
+ 4       4
+
+BEGIN
+       E       N      BV      EV
+       1       2       1       2
+   IDATA   SDATA   HDATA
+       1     0.0    0.05
+       1     1.0    0.05
+END
+
+BEGIN
+       E       N      BV      EV
+       2       2       2       3
+   IDATA   SDATA   HDATA
+       1    0.00   0.05
+       1    1.00   0.03
+END
+
+BEGIN
+       E       N      BV      EV
+       3       2       3       4
+   IDATA   SDATA   HDATA
+       1     0.0    0.03
+       1     1.0    0.01
+END
+
+BEGIN
+       E       N      BV      EV
+       4       3       4       1
+   IDATA   SDATA   HDATA
+       1    0.00   0.01
+       1    0.6    0.01
+       1    1.00   0.03
+END

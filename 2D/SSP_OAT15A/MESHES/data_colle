@@ -1,0 +1,64 @@
+.f.  !    .t.= formatted  .f.=unformatted
+1
+. FEM.wing_flap
+0
+0
+. FEM.cart2
+
+. resc_FEM.dom3
+0
+0
+. resc_FEM.dom1
+0
+0
+. resc_FEM.dom2
+
+0 
+5
+. FEM.dom2
+
+. FEM.KPP
+0
+0
+
+. FEM.dom1
+0
+5
+. FEM.dom2
+0
+5
+. FEM.dom3
+0
+5
+. FEM.dom4
+0
+5
+. FEM.dom5
+0
+5
+. FEM.dom6
+
+1  ! nb_sd
+. FEM.KPP
+0 ! nb interface a conserver
+0 ! index de l'interface
+
+2  ! nb_sd
+. FEM.cart1
+1 ! nb interface a conserver
+5 ! index de l'interface
+. FEM.cart2
+
+
+
+. FEM.cav
+0 ! nb interface a conserver
+0 ! index de l'interface
+
+. FEM.carre1
+1 ! nb interface a conserver
+5 ! index de l'interface
+. FEM.carre2
+
+1  ! nb_sd
+. FEM.cav5

@@ -1,0 +1,16 @@
+.f.  !    .t.= formatted  .f.=unformatted
+1  ! nb_sd
+. FEM.step_regul
+0
+0
+
+
+
+. FEM.BUCKLEY
+0 ! nb interface a conserver
+0 ! index de l'interface
+
+. FEM.carre
+0
+0
+
