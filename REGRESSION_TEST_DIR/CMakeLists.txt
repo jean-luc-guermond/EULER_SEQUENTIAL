@@ -12,7 +12,7 @@ project(regression_test)
 
 include(CTest) # We include CTest which is part of CMake
 
-set(ROOT /home/guermond/CONSERVATION_EQUATIONS/EULER/EULER_SEQUENTIAL)
+set(ROOT $ENV{EULER_DIR})
 
 ADD_CUSTOM_TARGET(debug
   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
