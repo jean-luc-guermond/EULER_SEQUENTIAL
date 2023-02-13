@@ -1,3 +1,3 @@
 cp data_low_order data
 cp reference_regression_test_low_order reference_regression_test
-srun-serial ../EXECUTABLE/ssp_euler_wind_tunnel.exe regression
+$run_ctest ../EXECUTABLE/ssp_euler_wind_tunnel.exe regression
