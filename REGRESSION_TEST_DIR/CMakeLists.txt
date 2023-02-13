@@ -1,14 +1,11 @@
 # Cmake minimum version
 cmake_minimum_required(VERSION 3.5)
 
-
 # Enable Fortran
 enable_language(Fortran)
 
 # Project name and version
 project(regression_test)
-
-
 
 include(CTest) # We include CTest which is part of CMake
 
@@ -50,6 +47,5 @@ add_subdirectory(${ROOT}/1D/IDP_SMOOTH ${ROOT}/1D/IDP_SMOOTH/BUILD)
 add_subdirectory(${ROOT}/1D/IDP_SODT ${ROOT}/1D/IDP_SODT/BUILD)
 ## 2D
 add_subdirectory(${ROOT}/2D/IDP_WIND_TUNNEL_REG ${ROOT}/2D/IDP_WIND_TUNNEL_REG/BUILD)
-
 
 enable_testing()
