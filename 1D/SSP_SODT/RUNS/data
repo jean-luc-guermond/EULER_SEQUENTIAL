@@ -24,11 +24,12 @@ mesh.FEM
 .45d0
 ===Method type (galerkin, viscous, high)===
 'high'
+'galerkin'
+'viscous'
 ===Mass matrix lumped (true/false)===
 .f.
 ===High-order method===
 'EV(s)'
-'SM(p)'
 ===Convex limiting (true/false)===
 .t.
 ===Limiter type (avg, minmod)===

@@ -6,7 +6,7 @@ MODULE IDP_limiting_euler
   REAL(KIND=8), PARAMETER, PRIVATE :: small=1.d-8
 CONTAINS
 
-  SUBROUTINE convex_limiting_proc(un,ulow,unext,cij,stiff,dijH,dijL,mc_minus_ml,lij,&
+  SUBROUTINE convex_limiting_proc(un,ulow,unext,cij,stiff,dijH,dijL,FluxijH,FluxijL,mc_minus_ml,lij,&
        urelaxi,drelaxi,lumped,diag,scalar,fctmat)
     USE boundary_conditions
     USE space_dim
@@ -15,6 +15,7 @@ CONTAINS
     REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size) :: un, ulow, unext
     TYPE(matrice_bloc), DIMENSION(k_dim)     :: cij
     TYPE(matrice_bloc)                       :: stiff, dijL, dijH, mc_minus_ml, lij
+    TYPE(matrice_bloc), DIMENSION(:)         :: FluxijL, FluxijH
     REAL(KIND=8), DIMENSION(mesh%np)         :: urelaxi,drelaxi,lumped
     INTEGER,      DIMENSION(mesh%np)         :: diag
     REAL(KIND=8)                             :: scalar
@@ -49,7 +50,7 @@ CONTAINS
           rhomax(i) = MAX(rhomax(i), rhoij)
        END DO
     END DO
-    write(*,*) ' ok0', maxval(rhomax), minval(rhomin)
+ 
     !===Relax bounds
     IF (inputs%if_relax_bounds) THEN
        CALL relax(un(:,1),rhomin,rhomax,stiff,urelaxi,drelaxi)
@@ -64,19 +65,17 @@ CONTAINS
     END IF
 
     !===Limiting matrix, viscosity + mass matrix correction
-    CALL compute_fct_matrix_full(scalar,un,du,fctmat,dijH,dijL,mc_minus_ml)
-    WRITE(*,*) ' fctmat', maxval(fctmat(1)%aa), minval(fctmat(1)%aa)
+    CALL compute_fct_matrix_full(scalar,un,du,fctmat,dijH,dijL,FluxijH,FluxijL,mc_minus_ml)
     
     !===Convex limiting
     DO it = 1,  2 !and more is good for large CFL
        lij%aa = 1.d0
        !===Limit density
-       write(*,*) ' ok0', maxval(rhomax), minval(rhomin)
-       CALL FCT_generic(ulow,rhomax,rhomin,fctmat(1),lumped,1,lij)
-       !CALL LOCAL_limit(ulow,rhomax,rhomin,fctmat(1),lumped,1,diag,lij)!===Works best
+       !CALL FCT_generic(ulow,rhomax,rhomin,fctmat(1),lumped,1,lij)
+       CALL LOCAL_limit(ulow,rhomax,rhomin,fctmat(1),lumped,1,diag,lij)!===Works best
 
        !===Limit rho*e - e^(s_min) rho^gamma
-!       CALL limit_specific_entropy(ulow,un,ccmin,lumped,fctmat,lij)!===Works best
+       CALL limit_specific_entropy(ulow,un,ccmin,lumped,fctmat,lij)!===Works best
 
        !===Tranpose lij
        CALL transpose_op(lij,'min')
@@ -91,19 +90,22 @@ CONTAINS
 
   END SUBROUTINE convex_limiting_proc
 
-  SUBROUTINE compute_fct_matrix_full(scalar,un,du,fctmat,dijH,dijL,mc_minus_ml)
+  SUBROUTINE compute_fct_matrix_full(scalar,un,du,fctmat,dijH,dijL,FluxijH,FluxijL,mc_minus_ml)
     IMPLICIT NONE
     TYPE(matrice_bloc)                           :: dijL, dijH, mc_minus_ml
+    TYPE(matrice_bloc), DIMENSION(:)             :: FluxijL, FluxijH
     TYPE(matrice_bloc), DIMENSION(inputs%syst_size)       :: fctmat
     REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(IN) :: un, du
     REAL(KIND=8) :: scalar
     INTEGER :: i, j, k, p
+    DO k = 1, inputs%syst_size
+        fctmat(k)%aa = inputs%dt*(FluxijH(k)%aa - FluxijL(k)%aa) 
+    END DO
     DO i = 1, mesh%np
        DO p = dijL%ia(i), dijL%ia(i+1) - 1
           j = dijL%ja(p)
           DO k = 1, inputs%syst_size
-             fctmat(k)%aa(p) = scalar*(dijH%aa(p)-dijL%aa(p))*(un(j,k)-un(i,k)) &
-                  -mc_minus_ml%aa(p)*(du(j,k)-du(i,k))
+             fctmat(k)%aa(p) = fctmat(k)%aa(p) - mc_minus_ml%aa(p)*(du(j,k)-du(i,k))
           END DO
        END DO
     END DO

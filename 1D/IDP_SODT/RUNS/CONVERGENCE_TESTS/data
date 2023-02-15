@@ -26,7 +26,6 @@ mesh.FEM
 .45d0
 ===Method type (galerkin, viscous, high)===
 'high'
-'viscous'
 ===Mass matrix lumped (true/false)===
 .f.
 ===High-order method===
@@ -37,7 +36,7 @@ mesh.FEM
 'avg'
 'minmod'
 ===Relax bounds?===
-.f.
+.t.
 ===ce coefficient===
 1.d0
 

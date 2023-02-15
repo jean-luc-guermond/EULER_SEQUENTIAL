@@ -63,8 +63,8 @@ target_link_libraries(${exe} ${SMALL_SFEMaNS_LIB} LAPACK::LAPACK)
 # Regression tests
 set(passRegex "ok")
 
-list(APPEND name_of_test    0     )
-list(APPEND name_of_command low.sh)
+list(APPEND name_of_test    0      1 )
+list(APPEND name_of_command low.sh high.sh)
 
 foreach(num IN ZIP_LISTS name_of_test name_of_command)
   set (nm "idp_1D_sodt${num_0}")

@@ -534,6 +534,7 @@ CONTAINS
     INTEGER :: comp, k, i, j, p
     REAL(KIND=8) :: zz
     REAL(KIND=8) :: small_res
+
     u2 = 0.d0
     DO k = 1, k_dim 
        u2 = u2 + (un(k+1,:)/un(1,:))**2
@@ -564,6 +565,9 @@ CONTAINS
        STOP
     END SELECT
 
+    !===Small normalization that is never zero
+    small_res = small*MAXVAL(cij(1)%aa)*SQRT(MAXVAL(un(k_dim+2,:))/maxval(un(1,:)))*maxval(ABS(en))
+    
     !================TEST IN PAPER DONE WITH THIS SETTING
     !================DO NOT CHANGE
     res = rkgal(1,:)*(DS(1,:)- s)
@@ -587,7 +591,8 @@ CONTAINS
        absres2(i) = ABS(zz) !==Essential to have this normalization in 2D
     END DO
     
-    small_res = small*MAXVAL(abs(res))
+    !small_res = small*MAXVAL(abs(res))
+  
     !================TEST IN PAPER DONE WITH THIS SETTING
     !================DO NOT CHANGE
     s = MIN(1.d0,inputs%ce*abs(res)/(absres1+absres2+small_res))

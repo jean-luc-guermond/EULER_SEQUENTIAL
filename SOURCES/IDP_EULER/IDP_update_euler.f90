@@ -32,13 +32,12 @@ CONTAINS
     USE fem_s_M
     USE lin_alg_tools
     USE CSR_transpose
-        
     IMPLICIT NONE
     INTEGER :: i, k, p, l
     REAL(KIND=8) :: dd
     !===Mass
     CALL compute_mass(mesh,mass)
-    
+ 
     !===lumped
     CALL lumped_mass(mesh,mass,lumped)
 
@@ -192,7 +191,6 @@ CONTAINS
        CALL divide_by_lumped(.true.,rk)
        ulow(:,:) = un(:,:,stage_prime)+inputs%dt*rk
 
- 
        !===High-order update
        DO comp = 1, inputs%syst_size
           fluxij_High(comp,stage-1)%aa = fluxij_Gal(comp)%aa
@@ -201,20 +199,16 @@ CONTAINS
              fluxijH(comp)%aa = fluxijH(comp)%aa+ERK%MatRK(stage,l)*fluxij_High(comp,l)%aa
           END DO
        END DO
-       CALL sum_flux(fluxij_Gal,rk)
-       CALL entropy_residual(un,rk)
+       CALL sum_flux(fluxij_Gal,rk) !===Galerkin flux at stage-1
+       CALL entropy_residual(un(:,:,stage-1),rk) !===Entropy residual at stage-1
        CALL add_visc_to_flux(dijH,fluxijH,ERK%inc_C(stage),un(:,:,stage_prime))
        CALL sum_flux(fluxijH,rk)
        CALL divide_by_lumped(inputs%if_lumped,rk)
 
+       un(:,:,stage) = un(:,:,stage_prime)+inputs%dt*rk !===Unlimited high-order solution
        IF (inputs%if_convex_limiting) THEN
-          !uhigh = un(:,:,stage_prime)+inputs%dt*rk
-          un(:,:,stage) =  un(:,:,stage_prime)+inputs%dt*rk
-          !CALL convex_limiting_proc(uhigh,ulow,un(:,:,stage))
           CALL  convex_limiting_proc(un(:,:,stage_prime),ulow,un(:,:,stage),cij,&
-               stiff,dijH,dijL,mc_minus_ml,lij,urelaxi,drelaxi,lumped,diag,ERK%inc_C(stage),fctmat)
-       ELSE
-          un(:,:,stage) = un(:,:,stage_prime)+inputs%dt*rk
+               stiff,dijH,dijL,FluxijH,FluxijL,mc_minus_ml,lij,urelaxi,drelaxi,lumped,diag,ERK%inc_C(stage),fctmat)
        END IF
        CALL IDP_euler_BC(un(:,:,stage),time_stage) !===Enforce boundary condition
        RETURN
@@ -276,370 +270,6 @@ CONTAINS
        END DO
     END DO
   END SUBROUTINE gal_flux
-
-
-
-  
-!!$  SUBROUTINE REMOVE_rhs(un,rk)
-!!$    USE boundary_conditions
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(IN)  :: un
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(OUT) :: rk
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim,inputs%syst_size)  :: vv
-!!$    REAL(KIND=8) :: rkloc
-!!$    INTEGER :: comp, i, j, p, k
-!!$    DO comp = 1, inputs%syst_size
-!!$       vv(:,:,comp)=flux(comp,un)
-!!$    END DO
-!!$    rk=0.d0
-!!$    DO i = 1, mesh%np
-!!$       DO p = mass%ia(i), mass%ia(i+1)-1
-!!$          j = mass%ja(p)
-!!$          DO comp = 1, inputs%syst_size
-!!$             rkloc = 0.d0
-!!$             DO k = 1, k_dim
-!!$                rkloc  = rkloc - cij(k)%aa(p)*(vv(j,k,comp))
-!!$             END DO
-!!$             rk(i, comp) = rk(i, comp) + rkloc
-!!$          END DO
-!!$       END DO
-!!$    END DO
-!!$  END SUBROUTINE REMOVE_rhs
-!!$
-!!$  SUBROUTINE REMOVE_galerkin(un,unext)
-!!$    USE boundary_conditions
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(IN)  :: un
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(OUT) :: unext
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size)  :: rk
-!!$    REAL(KIND=8), DIMENSION(mesh%np)                   :: ff
-!!$    INTEGER :: k
-!!$    CALL rhs(un,rk)
-!!$    CALL divide_by_lumped(inputs%if_lumped,rk)
-!!$    unext = un+inputs%dt*rk
-!!$  END SUBROUTINE REMOVE_galerkin
-
-!!$  SUBROUTINE viscous(un,unext)
-!!$    USE boundary_conditions
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(IN)  :: un
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(OUT) :: unext
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size)  :: rk
-!!$    INTEGER :: i, j, p, k
-!!$    CALL rhs(un,rk)
-!!$    CALL compute_dijL(un)
-!!$    DO i = 1, mesh%np
-!!$       DO p = mass%ia(i), mass%ia(i+1)-1
-!!$          j = mass%ja(p)
-!!$          DO k = 1, inputs%syst_size
-!!$             rk(i, k) = rk(i, k) + dijL%aa(p)*(un(j,k)-un(i,k))
-!!$          END DO
-!!$       END DO
-!!$    END DO
-!!$    CALL divide_by_lumped(.TRUE.,rk) !===We use lumped mass always
-!!$    unext = un+inputs%dt*rk
-!!$  END SUBROUTINE viscous
-
-!!$  SUBROUTINE high_order(un,ulow,unext)
-!!$    USE boundary_conditions
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(IN)  :: un
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(OUT) :: ulow, unext
-!!$    REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size)  :: rk, rkL, rkH
-!!$    REAL(KIND=8), DIMENSION(mesh%np)                   :: ff
-!!$    INTEGER :: i, j, k, p
-!!$
-!!$    !===Galerkin RHS
-!!$    CALL rhs(un,rk)
-!!$
-!!$    !===High-order viscosity
-!!$    CALL compute_dijL(un)
-!!$    SELECT CASE(inputs%high_order_viscosity)
-!!$    CASE('EV(p)','EV(s)') 
-!!$       CALL entropy_residual(un,rk)
-!!$    CASE('SM(p)','SM(s)','SM(rho)')  
-!!$       CALL smoothness_viscosity(un)
-!!$    CASE DEFAULT
-!!$       WRITE(*,*) ' high_order_viscosity not defined'
-!!$       STOP
-!!$    END SELECT
-!!$
-!!$    !===Add viscosity
-!!$    rkH=rk
-!!$    rkL=rk
-!!$    DO i = 1, mesh%np
-!!$       DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$          j = mass%ja(p)
-!!$          rkH(i,:) = rkH(i,:) + dijH%aa(p)*(un(j,:)-un(i,:))
-!!$          rkL(i,:) = rkL(i,:) + dijL%aa(p)*(un(j,:)-un(i,:))
-!!$       END DO
-!!$    END DO
-!!$
-!!$    !===Solve and update
-!!$    CALL divide_by_lumped(.TRUE.,rkL)
-!!$    ulow = un+inputs%dt*rkL
-!!$
-!!$    CALL divide_by_lumped(inputs%if_lumped,rkH)
-!!$    unext = un+inputs%dt*rkH
-!!$  END SUBROUTINE high_order
-!!$
-!!$  SUBROUTINE IDP_euler(un,unext)
-!!$    USE mesh_handling
-!!$    USE boundary_conditions
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2)  :: un
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2), INTENT(OUT) :: unext
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2)              :: ulow
-!!$
-!!$    SELECT CASE(inputs%method_type) 
-!!$    CASE('galerkin') !===Galerkin
-!!$       CALL galerkin(un,unext)
-!!$       RETURN
-!!$    CASE('viscous') !===Viscous, firs-order
-!!$       CALL viscous(un,unext)
-!!$       RETURN
-!!$    CASE ('high') !===High-order
-!!$       CALL high_order(un,ulow,unext)
-!!$       IF (inputs%if_convex_limiting) THEN
-!!$          CALL convex_limiting_proc(un,ulow,unext)
-!!$       END IF
-!!$       RETURN
-!!$    CASE DEFAULT
-!!$       WRITE(*,*) ' BUG in euler: inputs%method_type not correct'
-!!$       STOP
-!!$    END SELECT
-!!$  END SUBROUTINE IDP_euler
-
-
-!!$  SUBROUTINE REMOVE_relax(un,minn,maxn)
-!!$    USE mesh_handling
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(:)              :: un
-!!$    REAL(KIND=8), DIMENSION(:)              :: minn
-!!$    REAL(KIND=8), DIMENSION(:)              :: maxn
-!!$    REAL(KIND=8), DIMENSION(SIZE(un))       :: alpha, denom
-!!$    INTEGER      :: i, j, p
-!!$    REAL(KIND=8) :: norm
-!!$    alpha = 0.d0
-!!$    DO i = 1, mesh%np
-!!$       norm = 0.d0
-!!$       DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$          j = mass%ja(p)
-!!$          IF (i==j) CYCLE
-!!$          alpha(i) = alpha(i) + stiff%aa(p)*(un(i) - un(j))
-!!$!!!alpha(i) = alpha(i) + (un(i) - un(j))
-!!$          norm = norm + stiff%aa(p)
-!!$       END DO
-!!$       alpha(i) = alpha(i)/norm
-!!$    END DO
-!!$    SELECT CASE(inputs%limiter_type)
-!!$    CASE('avg') !==Average
-!!$       denom = 0.d0
-!!$       DO i = 1, SIZE(un)
-!!$          DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$             j = mass%ja(p)
-!!$             IF (i==j) CYCLE
-!!$             denom(i) = denom(i) + alpha(j) + alpha(i)
-!!$          END DO
-!!$       END DO
-!!$       DO i = 1, SIZE(un)
-!!$          denom(i) = denom(i)/(2*(mass%ia(i+1)-mass%ia(i)-1))
-!!$       END DO
-!!$       maxn = MIN(urelaxi*maxn,maxn + ABS(denom)/2)
-!!$       minn = MAX(drelaxi*minn,minn - ABS(denom)/2)
-!!$    CASE ('minmod') !===Minmod
-!!$       denom = alpha    
-!!$       DO i = 1, SIZE(un)
-!!$          DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$             j = mass%ja(p)
-!!$             IF (i==j) CYCLE
-!!$             IF (denom(i)*alpha(j).LE.0.d0) THEN
-!!$                denom(i) = 0.d0
-!!$             ELSE IF (ABS(denom(i)) > ABS(alpha(j))) THEN
-!!$                denom(i) = alpha(j)
-!!$             END IF
-!!$          END DO
-!!$       END DO
-!!$       maxn = MIN(urelaxi*maxn,maxn + ABS(denom)/2)
-!!$       minn = MAX(drelaxi*minn,minn - ABS(denom)/2)
-!!$    CASE DEFAULT
-!!$       WRITE(*,*) ' BUG in relax'
-!!$       STOP
-!!$    END SELECT
-!!$  END SUBROUTINE REMOVE_RELAX
-!!$
-!!$  SUBROUTINE REMrelax_cmin(un,cmin)
-!!$    USE mesh_handling
-!!$    USE boundary_conditions
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(:,:)            :: un
-!!$    REAL(KIND=8), DIMENSION(:)              :: cmin
-!!$    REAL(KIND=8), DIMENSION(SIZE(cmin))     :: dc
-!!$    REAL(KIND=8), DIMENSION(k_dim+2)        :: ul
-!!$    INTEGER      :: i, j, p
-!!$    REAL(KIND=8) :: cl
-!!$    dc = 0.d0
-!!$    DO i = 1, mesh%np
-!!$       DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$          j = mass%ja(p)
-!!$          IF (i==j) CYCLE
-!!$          ul(:) = (un(i,:)+un(j,:))/2
-!!$          cl = (ul(k_dim+2)-SUM(ul(2:k_dim+1)**2)/(2.d0*ul(1)))/(ul(1)**gamma)
-!!$          dc(i) = MAX(dc(i),cl-cmin(i))
-!!$       END DO
-!!$    END DO
-!!$    cmin = MAX(drelaxi*cmin, cmin - dc)
-!!$  END SUBROUTINE REMrelax_cmin
-!!$
-!!$
-!!$  SUBROUTINE limit_specific_entropy(ulow,un,cmin)
-!!$    USE boundary_conditions
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2), INTENT(IN) :: ulow, un
-!!$    REAL(KIND=8), DIMENSION(mesh%np)                     :: cmin
-!!$    REAL(KIND=8), DIMENSION(mesh%np)  :: Esmall
-!!$    REAL(KIND=8), DIMENSION(k_dim+2)  :: ul, ur, Pij
-!!$    REAL(KIND=8) :: lambdai, coeff, psir, psil, ll, lr, llold, lrold, Budget
-!!$    INTEGER      :: i, j, p, k
-!!$
-!!$    !===
-!!$    DO i = 1, mesh%np
-!!$       Esmall(i)= small*MINVAL(un(mass%ja(mass%ia(i):mass%ia(i+1)-1),k_dim+2))
-!!$       lambdai = 1.d0/(mass%ia(i+1) - 1.d0 - mass%ia(i))
-!!$       coeff = 1.d0/(lambdai*lumped(i))
-!!$
-!!$       !===Budget
-!!$       Qplus = 0.d0
-!!$       Card  = 0
-!!$       DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$          j = mass%ja(p)
-!!$          IF (i==j) CYCLE
-!!$          ul = ulow(:,i)
-!!$          DO k = 1 , k_dim+2
-!!$             Pij(k) = fctmat(k)%aa(p)*coeff
-!!$             ur(k) = ulow(k,i) + lij%aa(p)*Pij(k) !===Density must be positive
-!!$          END DO
-!!$          dQplus = MIN(psi_func(ul,cmin(i),0.d0),psi_func(ur,cmin(i),0.d0))
-!!$          IF (dQplus>0.d0) THEN
-!!$             Qplus = Qplus + dQplus
-!!$          ELSE
-!!$             Card  = Card + 1
-!!$          END IF
-!!$       END DO
-!!$       IF (Card.NE.0) THEN
-!!$          Budget = -Qplus/Card
-!!$       ELSE
-!!$          Budget = -1d15*Qplus
-!!$       END IF
-!!$       Budget =0.d0
-!!$       !===End Budget
-!!$
-!!$       DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$          j =  mass%ja(p)
-!!$          IF (i==j) THEN
-!!$             lij%aa(p) = 0.d0
-!!$             CYCLE
-!!$          END IF
-!!$          lr = lij%aa(p)
-!!$          DO k = 1, k_dim+2
-!!$             Pij(k) = fctmat(k)%aa(p)*coeff
-!!$             ur(k) = ulow(i,k) + lr*Pij(k) !===Density must be positive
-!!$          END DO
-!!$          IF (ur(1)<0.d0) THEN
-!!$             lij%aa(p) = 0.d0  !===CFL is too large
-!!$             CYCLE
-!!$          END IF
-!!$          psir = psi_func(ur,cmin(i),Budget)
-!!$          IF (psir.GE.-Esmall(i)) THEN
-!!$             lij%aa(p) = lij%aa(p)
-!!$             CYCLE
-!!$          END IF
-!!$          ll = 0.d0
-!!$          ul = ulow(i,:)
-!!$          psil = psi_func(ul,cmin(i),Budget)
-!!$          DO WHILE (ABS(psil-psir) .GT. Esmall(i))
-!!$             llold = ll
-!!$             lrold = lr
-!!$             ll = ll - psil*(lr-ll)/(psir-psil)
-!!$             lr = lr - psir/psi_prime_func(Pij,ur,cmin(i))
-!!$             IF (ll.GE.lr) THEN
-!!$                ll = lr !lold
-!!$                EXIT
-!!$             END IF
-!!$             IF (ll< llold) THEN
-!!$                ll = llold
-!!$                EXIT
-!!$             END IF
-!!$             IF (lr > lrold) THEN
-!!$                lr = lrold
-!!$                EXIT
-!!$             END IF
-!!$             ul = ulow(i,:) + ll*Pij
-!!$             ur = ulow(i,:) + lr*Pij
-!!$             psil = psi_func(ul,cmin(i),Budget)
-!!$             psir = psi_func(ur,cmin(i),Budget)
-!!$          END DO
-!!$          IF (psir.GE.-Esmall(i)) THEN
-!!$             lij%aa(p) = lr
-!!$          ELSE
-!!$             lij%aa(p) = ll
-!!$          END IF
-!!$       END DO
-!!$    END DO
-!!$
-!!$  CONTAINS
-!!$    FUNCTION psi_func(u,cmin,Budget) RESULT(psi)
-!!$      IMPLICIT NONE
-!!$      REAL(KIND=8), DIMENSION(k_dim+2), INTENT(IN) :: u
-!!$      REAL(KIND=8),                     INTENT(IN) :: cmin
-!!$      REAL(KIND=8)                                 :: psi, Budget
-!!$      psi = u(k_dim+2) - SUM(u(2:k_dim+1)**2)/(2.d0*u(1)) - cmin*u(1)**gamma - Budget
-!!$    END FUNCTION psi_func
-!!$    FUNCTION psi_prime_func(Pij,u,cmin) RESULT(psi)
-!!$      IMPLICIT NONE
-!!$      REAL(KIND=8), DIMENSION(k_dim+2), INTENT(IN) :: u, Pij
-!!$      REAL(KIND=8),                     INTENT(IN) :: cmin
-!!$      REAL(KIND=8)                                 :: psi
-!!$      psi = Pij(k_dim+2) - SUM(u(2:k_dim+1)*Pij(2:k_dim+1))/u(1) &
-!!$           + Pij(1)*SUM(u(2:k_dim+1)**2)/(2*u(1)**2) &
-!!$           - cmin*gamma*Pij(1)*u(1)**(gamma-1.d0)
-!!$    END FUNCTION psi_prime_func
-!!$  END SUBROUTINE limit_specific_entropy
-!!$
-!!$
-!!$
-!!$  SUBROUTINE compute_fct_matrix_full(un,du)
-!!$    USE mesh_handling
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2), INTENT(IN) :: un, du
-!!$    INTEGER :: i, j, k, p
-!!$    DO i = 1, mesh%np
-!!$       DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$          j = mass%ja(p)
-!!$          DO k = 1 , k_dim+2
-!!$             fctmat(k)%aa(p) = inputs%dt*(dijH%aa(p)-dijL%aa(p))*(un(j,k)-un(i,k)) &
-!!$                  -mc_minus_ml%aa(p)*(du(j,k)-du(i,k))
-!!$          END DO
-!!$       END DO
-!!$    END DO
-!!$  END SUBROUTINE compute_fct_matrix_full
-!!$
-!!$  SUBROUTINE update_fct_full(ulow,unext)
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2) :: ulow
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2) :: unext
-!!$    REAL(KIND=8), DIMENSION(k_dim+2) :: x
-!!$    INTEGER :: i, k, p
-!!$    DO i = 1, mesh%np
-!!$       x = 0.d0
-!!$       DO p = mass%ia(i), mass%ia(i+1) - 1
-!!$          DO k = 1, k_dim+2
-!!$             x(k) = x(k) + lij%aa(p)*fctmat(k)%aa(p)
-!!$          END DO
-!!$       END DO
-!!$       DO k = 1, k_dim+2
-!!$          unext(i,k) = ulow(i,k) + x(k)/lumped(i)
-!!$       END DO
-!!$    END DO
-!!$  END SUBROUTINE update_fct_full
 
   SUBROUTINE compute_dijL(un)
     USE mesh_handling
@@ -709,8 +339,6 @@ CONTAINS
              !CALL lambda_VDW(rhol,ul,el/rhol,rhor,ur,er/rhor,lambdal,lambdar)
              !write(*,*) 'lambdal, lambdar', lambdal, lambdar
              lambda_max = MAX(ABS(lambdal), ABS(lambdar))
-             !write(*,*) rhol, ul, pl, iel
-             !write(*,*) rhol, rhor, lambdal, lambdar
              dijL%aa(p) = norm_cij*lambda_max
           ELSE
              dijL%aa(p) = 0.d0
@@ -740,7 +368,6 @@ CONTAINS
     END DO
 
   END SUBROUTINE compute_dijL
-
 
   SUBROUTINE entropy_residual(un,rkgal)
     USE mesh_handling
@@ -784,6 +411,9 @@ CONTAINS
        STOP
     END SELECT
 
+    !===Small normalization that is never zero
+    small_res = small*MAXVAL(cij(1)%aa)*SQRT(MAXVAL(un(k_dim+2,:))/maxval(un(1,:)))*maxval(ABS(en))
+
     !================TEST IN PAPER DONE WITH THIS SETTING
     !================DO NOT CHANGE
     res = rkgal(:,1)*(DS(:,1)- s)
@@ -807,7 +437,6 @@ CONTAINS
        absres2(i) = ABS(zz) !==Essential to have this normalization in 2D
     END DO
 
-    small_res = small*MAXVAL(ABS(res))
     !================TEST IN PAPER DONE WITH THIS SETTING
     !================DO NOT CHANGE
     s = MIN(1.d0,inputs%ce*ABS(res)/(absres1+absres2+small_res))
@@ -902,132 +531,17 @@ CONTAINS
        END SELECT
     END IF
     !===Plot
-
   END SUBROUTINE smoothness_viscosity
-
-!!$  SUBROUTINE LOCAL_limit(unext,maxn,minn,mat,mass,comp)
-!!$    USE mesh_handling
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(:), INTENT(IN)   :: mass, maxn, minn
-!!$    TYPE(matrice_bloc),         INTENT(IN)   :: mat
-!!$    INTEGER,                    INTENT(IN)   :: comp
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2) :: unext
-!!$    REAL(KIND=8), PARAMETER :: smallplus = 1.d-15
-!!$    REAL(KIND=8) :: maxni, minni, ui, uij, xij, lambdai, umax, usmall
-!!$    INTEGER      :: i, j, p
-!!$
-!!$    !===Compute lij
-!!$    umax = MAX(MAXVAL(maxn),-MINVAL(minn))
-!!$    usmall = umax*smallplus
-!!$    lij%aa = 1.d0
-!!$    DO i = 1, mesh%np
-!!$       lambdai = 1.d0/(mat%ia(i+1) - 1.d0 - mat%ia(i))
-!!$       maxni = maxn(i)
-!!$       minni = minn(i)
-!!$       ui = unext(i,comp)
-!!$       DO p = mat%ia(i), mat%ia(i+1) - 1
-!!$          j = mat%ja(p)
-!!$          xij = mat%aa(p)/(mass(i)*lambdai)
-!!$          uij = ui + xij
-!!$          IF (uij>maxni) THEN
-!!$             lij%aa(p) = MIN(ABS(maxni - ui)/(ABS(xij)+usmall),1.0)
-!!$          ELSE IF (uij<minni) THEN
-!!$             lij%aa(p) = MIN(ABS(minni - ui)/(ABS(xij)+usmall),1.d0)
-!!$          END IF
-!!$       END DO
-!!$    END DO
-!!$    lij%aa(diag) = 0.d0
-!!$  END SUBROUTINE LOCAL_limit
-
-
-!!$  SUBROUTINE transpose_op(mat,TYPE)
-!!$    IMPLICIT NONE
-!!$    TYPE(matrice_bloc), INTENT(INOUT):: mat
-!!$    CHARACTER(LEN=3),  INTENT(IN)   :: TYPE
-!!$    INTEGER, DIMENSION(SIZE(mat%ia)) :: iao
-!!$    INTEGER:: i, j, p, next
-!!$    IF  (TYPE/='min' .AND. TYPE/='max') THEN
-!!$       WRITE(*,*) ' BUG in tanspose_op'
-!!$       STOP
-!!$    END IF
-!!$    iao = mat%ia
-!!$    DO i = 1, SIZE(mat%ia)-1
-!!$       DO p = mat%ia(i), mat%ia(i+1)-1 
-!!$          j = mat%ja(p)
-!!$          next = iao(j)
-!!$          iao(j) = next+1
-!!$          IF (j.LE.i) CYCLE
-!!$          IF (TYPE=='min') THEN
-!!$             mat%aa(next) = MIN(mat%aa(p),mat%aa(next))
-!!$             mat%aa(p) = mat%aa(next)
-!!$          ELSE IF (TYPE=='max') THEN
-!!$             mat%aa(next) = MAX(mat%aa(p),mat%aa(next))
-!!$             mat%aa(p) = mat%aa(next)
-!!$          END IF
-!!$       END DO
-!!$    END DO
-!!$  END SUBROUTINE transpose_op
 
   SUBROUTINE IDP_COMPUTE_DT(u0)
     IMPLICIT NONE
     REAL(KIND=8), DIMENSION(mesh%np,inputs%syst_size), INTENT(IN) :: u0
     CALL compute_dijL(u0)
-    inputs%dt = inputs%CFL*1/MAXVAL(ABS(dijL%aa(diag))/lumped)
+    inputs%dt = 0.5d0*inputs%CFL/MAXVAL(ABS(dijL%aa(diag))/lumped)
+    !===Rescale time step
+    inputs%dt = inputs%dt*ERK%s
+    !===Rescale time step
   END SUBROUTINE IDP_COMPUTE_DT
-
-!!$  SUBROUTINE FCT_generic(ulow,maxn,minn,mat,dg,comp)
-!!$    IMPLICIT NONE
-!!$    REAL(KIND=8), DIMENSION(:), INTENT(IN)  :: dg, maxn, minn
-!!$    TYPE(matrice_bloc),         INTENT(IN)  :: mat
-!!$    INTEGER,                    INTENT(IN)  :: comp
-!!$    REAL(KIND=8), DIMENSION(mesh%np,k_dim+2):: ulow
-!!$    REAL(KIND=8), DIMENSION(mesh%np)        :: Qplus, Qminus, Pplus, Pminus, Rplus, Rminus
-!!$    REAL(KIND=8), PARAMETER :: smallplus = small, smallminus = -small
-!!$    REAL(KIND=8) :: fij
-!!$    INTEGER      :: i, j, p, jp, jm
-!!$    Qplus  = dg*(maxn-ulow(:,comp))
-!!$    Qminus = dg*(minn-ulow(:,comp))
-!!$    Pplus  = smallplus
-!!$    Pminus = smallminus
-!!$    DO i = 1, mesh%np
-!!$
-!!$       DO p = mat%ia(i), mat%ia(i+1) - 1
-!!$          j = mat%ja(p)
-!!$          fij = mat%aa(p)
-!!$          jp = 0
-!!$          jm =0
-!!$          IF (fij.GE.0.d0) THEN
-!!$             jp = jp + 1
-!!$             Pplus(i)  = Pplus(i) + fij
-!!$          ELSE
-!!$             jm = jm + 1
-!!$             Pminus(i) = Pminus(i) + fij
-!!$          END IF
-!!$       END DO
-!!$       IF (jp>0) THEN
-!!$          Rplus(i)  =  MIN(Qplus(i)/Pplus(i),1.d0)
-!!$       ELSE
-!!$          RPLUS(i) = 1.d0
-!!$       END IF
-!!$       IF (jm>0) THEN
-!!$          Rminus(i) =  MIN(Qminus(i)/Pminus(i),1.d0)
-!!$       ELSE
-!!$          Rminus(i) =1.d0
-!!$       END IF
-!!$    END DO
-!!$
-!!$    DO i = 1, mesh%np
-!!$       DO p = mat%ia(i), mat%ia(i+1) - 1
-!!$          j = mat%ja(p)
-!!$          fij = mat%aa(p)
-!!$          IF (fij.GE.0.d0) THEN
-!!$             lij%aa(p) = MIN(Rplus(i),Rminus(j))
-!!$          ELSE
-!!$             lij%aa(p) = MIN(Rminus(i),Rplus(j))
-!!$          END IF
-!!$       END DO
-!!$    END DO
-!!$  END SUBROUTINE FCT_generic
 
   SUBROUTINE compute_greedy_dij(un)
     USE boundary_conditions
@@ -1183,7 +697,6 @@ CONTAINS
            - cmin*gamma*Pij(1)*u(1)**(gamma-1.d0)
     END FUNCTION psi_entrop_prime
   END SUBROUTINE compute_greedy_dij
-
 
   SUBROUTINE Newton_secant(ui, uj, Pij,limiter,psi_func,psi_prime_func,psi_small)
     IMPLICIT NONE

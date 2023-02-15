@@ -5,7 +5,7 @@ MODULE boundary_conditions
   PRIVATE
   REAL(KIND=8) :: rhol, pl, ul
   REAL(KIND=8) :: rhor, pr, ur
-  REAL(KIND=8) :: long, x0, x1
+  REAL(KIND=8) :: long, x0
 CONTAINS
 
   FUNCTION flux(comp,un) RESULT(vv)
@@ -59,7 +59,7 @@ CONTAINS
     IMPLICIT NONE 
     REAL(KIND=8), DIMENSION(:,:),         INTENT(IN) :: rr
     REAL(KIND=8), DIMENSION(SIZE(rr,2))              :: vv
-    REAL(KIND=8) :: xi, cl, cr, rhostarL, rhostarR, vstar, pstar, lambda1, lambda3
+    REAL(KIND=8) :: xi, rhostarL, rhostarR, vstar, pstar, lambda1, lambda3
     INTEGER :: n
     IF (SIZE(vv)==0) RETURN
     DO n = 1, SIZE(vv)
@@ -75,7 +75,7 @@ CONTAINS
     IMPLICIT NONE 
     REAL(KIND=8), DIMENSION(:,:),        INTENT(IN) :: rr
     REAL(KIND=8), DIMENSION(SIZE(rr,2))             :: vv
-    REAL(KIND=8) :: xi, cl, cr, rhostarL, rhostarR, vstar, pstar, lambda1, lambda3
+    REAL(KIND=8) :: xi, rhostarL, rhostarR, vstar, pstar, lambda1, lambda3
     INTEGER :: n
     IF (SIZE(vv)==0) RETURN
     DO n = 1, SIZE(vv)
@@ -92,7 +92,7 @@ CONTAINS
     INTEGER,                             INTENT(IN) :: comp
     REAL(KIND=8), DIMENSION(:,:),        INTENT(IN) :: rr
     REAL(KIND=8), DIMENSION(SIZE(rr,2))             :: vv
-    REAL(KIND=8) :: xi, cl, cr, rhostarL, rhostarR, vstar, pstar, lambda1, lambda3
+    REAL(KIND=8) :: xi, rhostarL, rhostarR, vstar, pstar, lambda1, lambda3
     INTEGER :: n
     IF (SIZE(vv)==0) RETURN
     DO n = 1, SIZE(vv)

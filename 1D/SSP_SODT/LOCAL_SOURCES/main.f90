@@ -20,7 +20,7 @@ PROGRAM compressible_euler
   tps = user_time()
   it_max = int(inputs%Tfinal/inputs%dt)
   inputs%dt = inputs%Tfinal/it_max
-  tps = user_time() 
+  tps = user_time()
   DO WHILE(inputs%time<inputs%Tfinal)
      it = it + 1
      CALL COMPUTE_DT(un)
@@ -47,7 +47,6 @@ PROGRAM compressible_euler
   END DO
   tps = user_time() - tps
   WRITE(*,*) 'total time', tps, 'Time per time step and dof', tps/(it_time*mesh%np)
-
   !===Regression test
   CALL regression(un)
 

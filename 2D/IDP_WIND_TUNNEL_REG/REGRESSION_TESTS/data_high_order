@@ -28,6 +28,8 @@ step_regul_0.05_0.02.FEM
 1
 ===Type of finite element===
 1
+===RK method type===
+-31
 ===Final time===
 4.d0
 ===CFL number===
@@ -45,6 +47,6 @@ step_regul_0.05_0.02.FEM
 ===Limiter type (avg, minmod)===
 'minmod'
 ===Relax bounds?===
-.f.
+.t.
 ===dt_plot
 1.

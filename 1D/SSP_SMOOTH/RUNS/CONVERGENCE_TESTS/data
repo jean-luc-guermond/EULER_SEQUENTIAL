@@ -25,9 +25,9 @@ mesh.FEM
 ===CFL number===
 .25d0
 ===Method type (galerkin, viscous, high)===
+'high'
 'viscous'
 'galerkin'
-'high'
 ===High-order method===
 EV(s)
 ===Mass matrix lumped (true/false)===
@@ -35,10 +35,9 @@ EV(s)
 ===Convex limiting (true/false)===
 .t.
 ===Limiter type (avg, minmod)===
+'avg'
 'minmod'
 ===Relax bounds?===
 .t.
 ===ce coefficient===
 1.d0
-
-
