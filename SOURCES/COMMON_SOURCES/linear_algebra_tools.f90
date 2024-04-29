@@ -1,6 +1,6 @@
 MODULE lin_alg_tools
 CONTAINS
-    SUBROUTINE compute_cij(mesh,cij)
+  SUBROUTINE compute_cij(mesh,cij)
     USE def_type_mesh
     USE matrix_type
     USE space_dim
@@ -13,7 +13,7 @@ CONTAINS
     REAL(KIND=8), DIMENSION(k_dim) :: xx
     INTEGER :: k, m, i, j, ni, nj, p
     INTEGER :: js, ms, nsi, nsj
- 
+
     DO k = 1, k_dim
        CALL st_csr(mesh%jj, cij(k)%ia, cij(k)%ja)
        ALLOCATE(cij(k)%aa(SIZE(cij(k)%ja)))
@@ -178,5 +178,154 @@ CONTAINS
     END DO
   END SUBROUTINE diag_mat
 
+  SUBROUTINE st_csr_vect(uu_jj, n_b, ia, ja)
+    USE sorting
+    IMPLICIT NONE
+    INTEGER, DIMENSION(:,:), INTENT(IN)  :: uu_jj
+    INTEGER, DIMENSION(:),   POINTER     :: ia, ja
+    INTEGER,                 INTENT(IN)  :: n_b 
+    INTEGER :: nparm=180
+    INTEGER :: me, nw_u, nmax, np_u
+    INTEGER :: m, ni, nj, i, j, n_a_d, ib, jb, ki, kj, np_tot
+    INTEGER, DIMENSION(:,:), ALLOCATABLE :: ja_work
+    INTEGER, DIMENSION(:),   ALLOCATABLE :: nja, a_d
+    nw_u = SIZE(uu_jj, 1)
+    me  = SIZE(uu_jj, 2)
+    np_u = MAXVAL(uu_jj)
+    np_tot = n_b*np_u
+    ALLOCATE (ja_work(np_tot,nparm), ia(np_tot+1), a_d(nparm), nja(np_tot))
+    ja_work = 0
+    nja = 0
+
+    !===Bloc uu x uu
+    DO m = 1, me
+       DO ni = 1, nw_u
+          i = uu_jj(ni,m)
+          DO nj = 1, nw_u
+             j = uu_jj(nj,m)
+             DO ki = 1, n_b
+                ib = (i-1)*n_b + ki
+                DO kj = 1, n_b
+                   jb = (j-1)*n_b + kj
+                   IF (nja(ib)==0) THEN
+                      nja(ib) = nja(ib) + 1
+                      ja_work(ib,nja(ib)) = jb
+                   ELSE IF (MINVAL(ABS(ja_work(ib,1:nja(ib))-jb)) /= 0) THEN
+                      nja(ib) = nja(ib) + 1
+                      ja_work(ib,nja(ib)) = jb
+                   END IF
+                END DO
+             END DO
+          END DO
+       END DO
+    END DO
+
+    IF (MAXVAL(nja)>nparm) THEN
+       WRITE(*,*) 'ST_SPARSEKIT: dimension of ja must be >= ',nparm
+       STOP
+    END IF
+    nmax = 0
+    DO i = 1, np_tot
+       nmax = nmax + nja(i)
+    END DO
+    ALLOCATE(ja(nmax))
+    ia(1) = 1
+    DO i = 1, np_tot
+       CALL tri_jlg (ja_work(i,1:nja(i)), a_d, n_a_d)
+       IF (n_a_d /= nja(i)) THEN
+          WRITE(*,*) ' BUG : st_csr_vect'
+          WRITE(*,*) 'n_a_d ', n_a_d, 'nja(i)', nja(i)
+          STOP
+       END IF
+       ia(i+1) = ia(i) + nja(i)
+       ja(ia(i):ia(i+1)-1) = a_d(1:nja(i))
+    END DO
+    DEALLOCATE ( ja_work, nja, a_d )
+  END SUBROUTINE st_csr_vect
+
+  SUBROUTINE elasticity_M (mesh, alpha, beta, stiff)
+    !=== 2*alpha(<< (Dw), (D_) >> + << (Dw), (D_)^t >>)/2 + beta << (D.w), (D._) >>
+    USE def_type_mesh
+    USE space_dim
+    USE matrix_type
+    IMPLICIT NONE
+    TYPE(mesh_type)                             :: mesh
+    REAL(KIND=8),                 INTENT(IN)    :: alpha, beta
+    TYPE(matrice_bloc),           INTENT(OUT)   :: stiff
+    INTEGER, DIMENSION(mesh%gauss%n_w)          :: jj_loc
+
+    INTEGER ::  m, l, p, ni, nj, ki, k1, kj, i, j, iloc, jloc, n_b
+    REAL(KIND=8) :: x, y
+    n_b = k_dim
+    CALL st_csr_vect(mesh%jj, n_b, stiff%ia, stiff%ja)
+    ALLOCATE(stiff%aa(SIZE(stiff%ja)))
+    stiff%aa = 0.d0
+    DO m = 1, mesh%me
+       jj_loc=mesh%jj(:,m)
+       DO ni = 1, mesh%gauss%n_w
+          iloc = jj_loc(ni)
+          DO ki = 1, k_dim
+             i = (iloc-1)*n_b + ki
+             DO nj = 1, mesh%gauss%n_w
+                jloc = jj_loc(nj)
+                DO kj = 1, k_dim
+                   j = (jloc-1)*n_b + kj
+                   x = 0.d0
+                   DO l = 1, mesh%gauss%l_G
+                      y =  alpha*mesh%gauss%dw(kj,ni,l,m)*mesh%gauss%dw(ki,nj,l,m) &
+                           + beta*mesh%gauss%dw(ki,ni,l,m)*mesh%gauss%dw(kj,nj,l,m)
+                      IF (kj.EQ.ki) THEN
+                         DO k1 = 1, k_dim
+                            y = y + alpha*mesh%gauss%dw(k1,ni,l,m)*mesh%gauss%dw(k1,nj,l,m)
+                         END DO
+                      END IF
+                      x = x + y * mesh%gauss%rj(l,m)
+                   END DO
+                   DO p = stiff%ia(i),  stiff%ia(i+1) - 1
+                      IF (stiff%ja(p) == j) THEN
+                         stiff%aa(p) = stiff%aa(p) + x
+                         EXIT
+                      ENDIF
+                   ENDDO
+
+                ENDDO
+             ENDDO
+          ENDDO
+       ENDDO
+    END DO
+  END SUBROUTINE elasticity_M
+
+  SUBROUTINE stiff_11_M (mesh, stiff)
+    USE def_type_mesh
+    USE space_dim
+    USE matrix_type
+    IMPLICIT NONE
+    TYPE(mesh_type)                   :: mesh
+    TYPE(matrice_bloc)                :: stiff
+    INTEGER,      DIMENSION(mesh%gauss%n_w) :: j_loc
+    REAL(KIND = 8), DIMENSION(mesh%gauss%k_d, mesh%gauss%n_w, mesh%gauss%l_G) :: dw_loc
+    REAL(KIND=8) :: x
+    INTEGER :: m, l, ni, nj, i, j, p
+    DO m = 1, mesh%me
+       j_loc = mesh%jj(:,m)
+       dw_loc = mesh%gauss%dw(:,:,:,m)
+       DO ni = 1, mesh%gauss%n_w
+          i = j_loc(ni)
+          DO nj = 1, mesh%gauss%n_w
+             j = j_loc(nj)
+             x = 0.d0
+             DO l = 1, mesh%gauss%l_G
+                x = x + SUM(dw_loc(:,nj,l)*dw_loc(:,ni,l))*mesh%gauss%rj(l,m)
+             END DO
+             DO p = stiff%ia(i),  stiff%ia(i+1) - 1
+                IF (stiff%ja(p) == j) THEN
+                   stiff%aa(p) = stiff%aa(p) + x
+                   EXIT
+                ENDIF
+             ENDDO
+          ENDDO
+       ENDDO
+    ENDDO
+  END SUBROUTINE stiff_11_M
 
 END MODULE lin_alg_tools

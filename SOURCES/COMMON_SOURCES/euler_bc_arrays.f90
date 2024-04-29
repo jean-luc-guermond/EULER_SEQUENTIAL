@@ -3,7 +3,7 @@ MODULE euler_bc_arrays
   USE dir_nodes
   USE space_dim
   USE input_data
-  INTEGER, POINTER, DIMENSION(:), PUBLIC :: rho_js_D, ux_js_D, uy_js_D, DIR_js_D
+  INTEGER, POINTER, DIMENSION(:), PUBLIC :: rho_js_D, ux_js_D, uy_js_D, DIR_js_D, whole_bdy_js_D
   INTEGER, POINTER, DIMENSION(:), PUBLIC :: udotn_js_D, surf_udotn_js_D
   REAL(KIND=8), POINTER, DIMENSION(:,:), PUBLIC:: surf_normal_vtx
   REAL(KIND=8), POINTER, DIMENSION(:,:), PUBLIC:: DIR_normal_vtx
@@ -19,6 +19,8 @@ CONTAINS
     REAL(KIND=8), ALLOCATABLE, DIMENSION(:,:) :: stuff
     INTEGER :: ms, ns, js, n
     ALLOCATE (dir(MAXVAL(mesh%sides)))
+    dir = .TRUE.
+    CALL dirichlet_nodes(mesh%jjs, mesh%sides, Dir, whole_bdy_js_D)
     dir = .FALSE.
     dir(inputs%rho_Dir_list) = .TRUE.
     CALL dirichlet_nodes(mesh%jjs, mesh%sides, Dir, rho_js_D)
@@ -31,6 +33,8 @@ CONTAINS
     dir = .FALSE.
     dir(inputs%Dir_list) = .TRUE.
     CALL dirichlet_nodes(mesh%iis, mesh%sides, Dir, DIR_js_D)
+
+
     !===Normal at vertices
     SELECT CASE(k_dim)
     CASE(2)

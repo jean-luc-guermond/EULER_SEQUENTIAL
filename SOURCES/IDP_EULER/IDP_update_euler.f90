@@ -6,7 +6,7 @@ MODULE IDP_update_euler
   USE Butcher_tableau
   USE input_data
   
-  PUBLIC:: full_step_ERK, IDP_construct_euler_matrices, IDP_compute_dt
+  PUBLIC:: full_step_ERK, IDP_construct_euler_matrices, IDP_compute_dt, one_stage_ERK
   INTEGER,  PUBLIC :: isolve_euler_pardiso
   TYPE(BT), PUBLIC :: ERK
   PRIVATE
@@ -372,6 +372,7 @@ CONTAINS
   SUBROUTINE entropy_residual(un,rkgal)
     USE mesh_handling
     USE boundary_conditions
+    USE euler_bc_arrays
     USE sub_plot
     IMPLICIT NONE
     REAL(KIND=8), DIMENSION(mesh%np,k_dim+2), INTENT(IN)  :: un, rkgal
@@ -441,6 +442,11 @@ CONTAINS
     !================DO NOT CHANGE
     s = MIN(1.d0,inputs%ce*ABS(res)/(absres1+absres2+small_res))
 
+    s = threshold(s)
+
+    !===New boundary fix (Feb 28, 2023)
+    s(whole_bdy_js_D) = 0.d0
+
     !================TEST IN PAPER DONE WITH THIS SETTING
     !================DO NOT CHANGE
     DO i = 1, mesh%np
@@ -460,6 +466,35 @@ CONTAINS
        END SELECT
     END IF
   END SUBROUTINE entropy_residual
+
+  FUNCTION threshold(x) RESULT(g)
+    USE mesh_handling
+    USE sub_plot
+    IMPLICIT NONE
+    REAL(KIND=8), DIMENSION(mesh%np)  :: x, z, t, zp, relu, f, g
+    !REAL(KIND=8), PARAMETER :: x0 = 0.1d0, x1=SQRT(3.d0)*x0 !x0=0.05 good for P1 (qudratic threshold)
+    REAL(KIND=8), PARAMETER :: x0 = 0.2d0 !x0=0.1 (cubic threshold)
+    !integer :: i
+    !do i = 1, mesh%np
+    !   x(i) = (i-1.d0)/mesh%np
+    !end do
+!!$    !===Quadratic threshold
+!!$    z = x-x0
+!!$    zp = x-2*x0
+!!$    relu = (zp+abs(zp))/2
+!!$    f = -z*(z**2-x1**2)  + relu*(z-x0)*(z+2*x0)
+!!$    g = (f + 2*x0**3)/(4*x0**3)
+!!$    !CALL plot_1d(x,g,'threshold1.plt') 
+!!$
+!!$    !===Cubic threshold
+    relu = ((x-2*x0)+abs(x-2*x0))/2
+    t = x/(2*x0)
+    g = t**3*(10-15*t+6*t**2) - relu*(t-1)**2*(6*t**2+3*t+1)/(2*x0)
+
+    !CALL plot_1d(x,g,'threshold2.plt') 
+    !stop
+    RETURN
+  END FUNCTION threshold
 
   SUBROUTINE smoothness_viscosity(un)
     USE mesh_handling

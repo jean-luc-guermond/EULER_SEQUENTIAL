@@ -251,8 +251,9 @@ CONTAINS
     REAL(KIND=8), DIMENSION(inputs%syst_size,mesh%np), INTENT(OUT) :: unext
     REAL(KIND=8), DIMENSION(inputs%syst_size,mesh%np)  :: rk
     INTEGER :: i, j, p, k
-    CALL rhs(un,rk)
+    CALL rhs(un,rk) 
     CALL compute_dij(un)
+    
     DO i = 1, mesh%np
        DO p = mass%ia(i), mass%ia(i+1)-1
           j = mass%ja(p)
@@ -261,8 +262,10 @@ CONTAINS
           END DO
        END DO
     END DO
+    
     CALL divide_by_lumped(rk) !===We use lumped mass always
     unext = un+inputs%dt*rk
+
   END SUBROUTINE viscous
 
   SUBROUTINE high_order(un,ulow,unext)
@@ -438,8 +441,11 @@ CONTAINS
     REAL(KIND=8) :: pstar
     LOGICAL      :: no_iter=.FALSE.
     INTEGER      :: nb_iterations
-    REAL(KIND=8) :: uu(3,2), pp(2)
+    REAL(KIND=8) :: uu(3,2), pp(2), lbd_max=0.d0
+
     DO i = 1, mesh%np
+       
+  
        DO p = cij(1)%ia(i), cij(1)%ia(i+1) - 1
           j = cij(1)%ja(p)
           IF (i.NE.j) THEN
@@ -489,15 +495,16 @@ CONTAINS
              !CALL lambda_VDW(rhol,ul,el/rhol,rhor,ur,er/rhor,lambdal,lambdar)
              !write(*,*) 'lambdal, lambdar', lambdal, lambdar
              lambda_max = MAX(ABS(lambdal), ABS(lambdar))
+             !lbd_max = MAX(lambda_max,lbd_max)
              !write(*,*) rhol, ul, pl, iel
-             !write(*,*) rhol, rhor, lambdal, lambdar
+             !write(*,*) rhol, rhor, (lambdal-ul)*rhoL, (lambdar+ur)*rhor
              dij%aa(p) = norm_cij*lambda_max
           ELSE
              dij%aa(p) = 0.d0
           END IF
        END DO
     END DO
-    
+    !write(*,*) 'lbd_max', lbd_max 
     !===More viscosity for nonconvex pressure
     IF ((inputs%max_viscosity)=='global_max') THEN
        pstar = MAXVAL(dij%aa)

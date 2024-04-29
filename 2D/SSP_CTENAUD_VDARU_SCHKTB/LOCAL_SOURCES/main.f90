@@ -30,8 +30,8 @@ PROGRAM compressible_euler
   tps = user_time()
   it_max = INT(inputs%Tfinal/inputs%dt)
   inputs%dt = inputs%Tfinal/it_max
-  !DO it = 1, 2it_max
-  DO WHILE(inputs%time<inputs%Tfinal)
+  DO it = 1, 100
+  !DO WHILE(inputs%time<inputs%Tfinal)
      it_reg = it_reg + 1
      IF (inputs%if_regression_test .AND. it_reg>5) THEN
         EXIT
@@ -56,7 +56,7 @@ PROGRAM compressible_euler
      un = (uo+ 2*ui)/3
      CALL euler_BC(un,to+inputs%dt) !t+dt/2
      inputs%time = to + inputs%dt
-     !WRITE(*,*) 'time, dt ', inputs%time, inputs%dt
+     write(*,*) ' time', inputs%time, inputs%dt, sum(lumped*un(1,:))
      IF ((inputs%time<t_plot .AND. inputs%time+inputs%dt/2>t_plot) .OR. &
           (inputs%time.GE.t_plot .AND. inputs%time-inputs%dt/2<t_plot)) THEN
         it_plot = it_plot + 1
@@ -78,5 +78,4 @@ PROGRAM compressible_euler
   CALL plot_scalar_field(mesh%jj, mesh%rr, pressure(un), 'press.plt')
   CALL ns_0 (mesh, un(1,:),  norm)
   WRITE(*,*) ' L2 norm of density ', norm
-CONTAINS
 END PROGRAM compressible_euler

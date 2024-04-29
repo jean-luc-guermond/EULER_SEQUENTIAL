@@ -29,7 +29,7 @@ PROGRAM compressible_euler
      IF (inputs%time + inputs%dt>inputs%Tfinal) THEN
         inputs%dt=inputs%Tfinal-inputs%time
      END IF
-      !write(*,*) 'time ', time, inputs%dt
+     write(*,*) 'time ', inputs%time, inputs%dt
      CALL full_step_ERK(un) 
      inputs%time = inputs%time + inputs%dt
      it_time = it_time + 1
@@ -37,7 +37,7 @@ PROGRAM compressible_euler
   tps = user_time() - tps
   WRITE(*,*) 'total time', tps, 'Time per time step and dof', tps/(it_time*mesh%np)
 
-   !===Regression test
+  !===Regression test
   CALL regression(un)
 
   CALL plot_1d(mesh%rr(1,:),un(:,1),'rho.plt')
@@ -100,6 +100,11 @@ CONTAINS
     WRITE(*,*) ' Error density relative, L1-norm    ', error_rho_1/norm_rho_1
     WRITE(*,*) ' Error density relative, L2-norm    ', error_rho_2/norm_rho_2
     WRITE(*,*) ' Error density relative, Linfty-norm', error_rho_inf/norm_rho_inf
+    CALL ns_0  (mesh, un(:,1), norm_rho_2)
+    CALL ns_0  (mesh, un(:,2), norm_mt_2)
+    CALL ns_0  (mesh, un(:,3), norm_E_2)
+    WRITE(*,*) ' L2-norm, rho, m, E                 ',  norm_rho_2, norm_mt_2, norm_E_2
+    
 
     CALL plot_1d(mesh%rr(1,:),r_e,'rho_exact')
     CALL plot_1d(mesh%rr(1,:),un(:,1)-r_e,'err_rho')

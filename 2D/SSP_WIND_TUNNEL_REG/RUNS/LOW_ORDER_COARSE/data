@@ -36,6 +36,6 @@ step_regul_0.05_0.01.FEM
 ===Final time===
 4.d0
 ===CFL number===
-1.2d0
+.5d0
 ===Method type (galerkin, viscous, high)===
 'viscous'

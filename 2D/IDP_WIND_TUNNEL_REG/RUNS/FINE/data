@@ -28,6 +28,8 @@ step_regul_207340.FEM
 1
 ===Type of finite element===
 1
+===RK method type===
+-31
 ===Final time===
 4.d0
 ===CFL number===

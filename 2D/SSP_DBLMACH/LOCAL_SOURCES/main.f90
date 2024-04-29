@@ -29,6 +29,7 @@ PROGRAM compressible_euler
   tps = user_time()
   it_max = INT(inputs%Tfinal/inputs%dt)
   inputs%dt = inputs%Tfinal/it_max
+  !DO it = 1, 1
   DO WHILE(inputs%time<inputs%Tfinal)
      it_reg = it_reg + 1
      IF (inputs%if_regression_test .AND. it_reg>5) THEN
@@ -67,7 +68,7 @@ PROGRAM compressible_euler
   tps = user_time() - tps
   WRITE(*,*) 'total time', tps, 'Time per time step per grid point', tps/(it_time*mesh%np), 'itmax', it_time
 
-  !===Regression test
+   !===Regression test
   CALL regression(un)
   
   CALL plot_scalar_field(mesh%jj, mesh%rr, un(1,:), 'rho.plt')

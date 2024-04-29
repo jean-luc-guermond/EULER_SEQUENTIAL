@@ -4,14 +4,16 @@
 mesh.FEM
 ===Is the mesh formatted? (True/False)===
 .F.
+===Equation of state===
+'gamma-law'
 ===How many Dirichlet boundaries for rho?===
-2
+1
 ===List of Dirichlet boundaries for rho?===
-1 2
+1
 ===How many Dirichlet boundaries for ux?===
-2
+1
 ===List of Dirichlet boundaries for ux?===
-1 2
+1
 ===Number of subdomains in the mesh===
 1
 ===List of subdomain in the mesh===
@@ -26,10 +28,12 @@ mesh.FEM
 .45d0
 ===Method type (galerkin, viscous, high)===
 'high'
+'galerkin'
+'viscous'
+===High-order method===
+EV(s)
 ===Mass matrix lumped (true/false)===
 .f.
-===High-order method===
-'EV(s)'
 ===Convex limiting (true/false)===
 .t.
 ===Limiter type (avg, minmod)===
@@ -39,4 +43,5 @@ mesh.FEM
 .t.
 ===ce coefficient===
 1.d0
+
 
