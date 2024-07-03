@@ -36,7 +36,6 @@ CONTAINS
        IF (SIZE(uy_js_D).NE.0) THEN
           unext(uy_js_D,3)  = sol_anal(3,mesh%rr(:,uy_js_D),time)
        END IF
-
        IF (SIZE(DIR_js_D).NE.0) THEN
           !===Dirichlet data
           rrD = mesh%rr(:,DIR_js_D)
@@ -85,7 +84,7 @@ CONTAINS
              !l2 = udotnD
              !l3 = udotnD + aD
 
-             IF (.TRUE.) THEN
+             IF (.true.) THEN
                 !===Riemann pb
                 tol = 1.d-10
                 DO n = 1, SIZE(DIR_js_D)

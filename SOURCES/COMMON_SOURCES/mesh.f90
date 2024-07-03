@@ -6,14 +6,44 @@ MODULE mesh_handling
   PUBLIC :: construct_mesh
   PRIVATE
  CONTAINS 
-   SUBROUTINE construct_mesh
+   SUBROUTINE construct_mesh(opt_edge_stab)
      USE input_data
      USE prep_maill
+     USE HCT_mesh
+     USE Powell_Sabin_mesh
      IMPLICIT NONE
+
+     LOGICAL, OPTIONAL :: opt_edge_stab
+     LOGICAL           :: edge_stab
+     TYPE(mesh_type)   :: p1_mesh
+     IF (.NOT.PRESENT(opt_edge_stab)) THEN
+        edge_stab = .FALSE.
+     ELSE
+        edge_stab = opt_edge_stab
+     END IF
      SELECT CASE(k_dim)
      CASE(2)
-        CALL load_mesh_free_format_iso(inputs%directory, inputs%file_name, &
-             inputs%list_dom, inputs%type_fe, mesh, inputs%if_mesh_formatted)
+        SELECT CASE (inputs%mesh_structure)
+        CASE ('')
+           CALL load_mesh_free_format_iso(inputs%directory,inputs%file_name,inputs%list_dom,&
+                inputs%type_fe,mesh,inputs%if_mesh_formatted, edge_stab=edge_stab)
+        CASE ('CRISS_CROSS')
+           CALL load_mesh_free_format_iso(inputs%directory,inputs%file_name,inputs%list_dom,&
+                inputs%type_fe,mesh,inputs%if_mesh_formatted, edge_stab=edge_stab)
+        CASE('HCT')
+           CALL convert_mesh_to_HCT(inputs%directory,inputs%file_name, &
+                inputs%list_dom, inputs%if_mesh_formatted, p1_mesh)
+           CALL load_mesh_free_format_iso(inputs%directory,inputs%file_name,inputs%list_dom,&
+                inputs%type_fe,mesh,inputs%if_mesh_formatted, edge_stab=edge_stab,opt_mesh=p1_mesh)
+        CASE('POWELL_SABIN')
+           CALL convert_mesh_to_Powell_Sabin(inputs%directory,inputs%file_name, &
+                inputs%list_dom, inputs%if_mesh_formatted, p1_mesh)
+           CALL load_mesh_free_format_iso(inputs%directory,inputs%file_name,inputs%list_dom,&
+                inputs%type_fe,mesh,inputs%if_mesh_formatted, edge_stab=edge_stab,opt_mesh=p1_mesh)
+        CASE DEFAULT
+           WRITE(*,*) ' BUG in create_mesh'
+           STOP
+        END SELECT
      CASE(1)
         CALL load_mesh_1d
      CASE DEFAULT 

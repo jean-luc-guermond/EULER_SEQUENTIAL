@@ -5,6 +5,7 @@ MODULE my_data_module
      CHARACTER(len=200)             :: directory
      CHARACTER(len=200)             :: file_name
      LOGICAL                        :: if_mesh_formatted
+     CHARACTER(len=20)              :: mesh_structure
      LOGICAL                        :: if_restart
      REAL(KIND=8)                   :: checkpointing_freq
      INTEGER                        :: nb_dom
@@ -61,6 +62,7 @@ CONTAINS
     a%type_test='gnu'
     a%equation_of_state='gamma-law'
     a%max_viscosity='none'
+    a%mesh_structure=''
     !===Integers
     a%nb_dom=-1
     a%type_fe=-1
@@ -98,6 +100,11 @@ CONTAINS
     ALLOCATE(inputs%list_dom(inputs%nb_dom))
     CALL read_until(21, '===List of subdomain in the mesh===')
     READ(21,*) inputs%list_dom
+    CALL find_string(in_unit, "===Mesh structure ('','POWELL_SABIN','HCT')===",okay)
+    IF (okay) THEN
+       READ (in_unit,*) inputs%mesh_structure
+    END IF
+    
     CALL read_until(21, '===Type of finite element===')
     READ(21,*) inputs%type_fe
     CALL find_string(in_unit, "===Equation of state===",okay)
@@ -106,7 +113,6 @@ CONTAINS
     END IF
 
     IF (inputs%equation_of_state.NE.'gamma-law') THEN
-       write(*,*) ' ******'
        CALL read_until(21, '===Covolume coefficient b===')
        READ(in_unit,*) inputs%b_covolume
     END IF

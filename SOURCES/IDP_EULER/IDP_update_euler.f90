@@ -177,8 +177,11 @@ CONTAINS
        CALL add_visc_to_flux(dijL,fluxijL,ERK%inc_C(stage),un(:,:,stage_prime))
        CALL sum_flux(fluxijL,rk)
        CALL divide_by_lumped(.true.,rk)
+       !write(*,*) 'SUM(abs(rk))', SUM(abs(rk(:,1))), SUM(abs(rk(:,2))),SUM(abs(rk(:,3))), SUM(abs(rk(:,4)))
+       !WRITE(*,*) 'SUM(un(:,2:3,stage_prime)', SUM(un(:,2:3,stage_prime))
        un(:,:,stage) = un(:,:,stage_prime)+inputs%dt*rk
        CALL IDP_euler_BC(un(:,:,stage),time_stage) !===Enforce boundary condition
+       !WRITE(*,*) 'SUM(un(:,2:3,stage)', SUM(un(:,2:3,stage))
        RETURN
     CASE('high')
        !===Low-order update
@@ -438,6 +441,9 @@ CONTAINS
        absres2(i) = ABS(zz) !==Essential to have this normalization in 2D
     END DO
 
+    !absres2 = SUM(absres2)/mesh%np
+    !absres1 = SUM(absres1)/mesh%np
+    
     !================TEST IN PAPER DONE WITH THIS SETTING
     !================DO NOT CHANGE
     s = MIN(1.d0,inputs%ce*ABS(res)/(absres1+absres2+small_res))
